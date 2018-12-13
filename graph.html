@@ -2,10 +2,13 @@
 	<body>
 		From <input id="from" type="datetime-local" />
 		to <input id="to" type="datetime-local" />
-		<button id="draw-btn" onclick="drawChart()" disabled>Show</button>
+		<button id="draw-btn" onclick="draw_chart()" disabled>Show</button>
 		<br /><br />
 		<div id="chart"></div>
+		<br /><br />
+		<canvas id="canvas"></canvas>
 		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script src="render.js"></script>
 		<script src="graph.js"></script>
 	</body>
 </html>
