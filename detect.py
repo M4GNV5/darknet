@@ -51,4 +51,4 @@ for i in range(num_gpus):
 	t.start()
 
 queue.join()
-print "DONE"
+print("DONE")
