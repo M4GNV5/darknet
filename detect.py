@@ -11,17 +11,27 @@ in_path = sys.argv[1] + "/"
 out_path = sys.argv[2] + "/"
 queue = Queue()
 num_gpus = 4
+total_count = 0
 
 def worker(i, net, meta):
 	dn.set_gpu(i)
 
 	while True:
 		in_file, out_file = queue.get()
+		try:
+			items = dn.detect(net, meta, in_file)
+		except:
+			print("Error analyzing file ", in_file)
+			continue
 
 		with open(out_file, "w+") as fd:
-			print(in_file)
-			items = dn.detect(net, meta, in_file)
 			json.dump(items, fd)
+
+		curr_count = queue.qsize()
+		done_count = total_count - curr_count
+		done_percent = int(float(done_count) / float(total_count) * 100)
+		sys.stdout.write("%d%% %d/%d\r" % (done_percent, done_count, total_count))
+		sys.stdout.flush()
 
 		queue.task_done()
 
@@ -36,7 +46,8 @@ if queue.empty():
 	print("No images to analyze! We are all done")
 	exit(0)
 else:
-	print("Analyzing %d images..." % (queue.qsize()))
+	total_count = queue.qsize()
+	print("Analyzing %d images..." % (total_count))
 
 args = []
 for i in range(num_gpus):
