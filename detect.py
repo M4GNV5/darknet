@@ -13,6 +13,17 @@ queue = Queue()
 num_gpus = 4
 total_count = 0
 
+def fill_queue():
+	global total_count
+
+	in_path_list = os.listdir(in_path)
+	out_path_list = os.listdir(out_path)
+	for in_file in in_path_list:
+		out_file = os.path.basename(in_file) + ".json"
+		if out_file not in out_path_list:
+			queue.put((in_path + in_file, out_path + out_file))
+			total_count = total_count + 1
+
 def worker(i, net, meta):
 	dn.set_gpu(i)
 
@@ -21,7 +32,7 @@ def worker(i, net, meta):
 		try:
 			items = dn.detect(net, meta, in_file)
 		except:
-			print("Error analyzing file ", in_file)
+			print("\nError analyzing file ", in_file)
 			continue
 
 		with open(out_file, "w+") as fd:
@@ -30,24 +41,13 @@ def worker(i, net, meta):
 		curr_count = queue.qsize()
 		done_count = total_count - curr_count
 		done_percent = int(float(done_count) / float(total_count) * 100)
-		sys.stdout.write("%d%% %d/%d\r" % (done_percent, done_count, total_count))
+		sys.stdout.write("\r%d%% %d/%d    " % (done_percent, done_count, total_count))
 		sys.stdout.flush()
 
 		queue.task_done()
 
-in_path_list = os.listdir(in_path)
-out_path_list = os.listdir(out_path)
-for in_file in in_path_list:
-	out_file = os.path.basename(in_file) + ".json"
-	if out_file not in out_path_list:
-		queue.put((in_path + in_file, out_path + out_file))
-
-if queue.empty():
-	print("No images to analyze! We are all done")
-	exit(0)
-else:
-	total_count = queue.qsize()
-	print("Analyzing %d images..." % (total_count))
+queue_filler = Thread(target=fill_queue, args = ())
+queue_filler.start()
 
 args = []
 for i in range(num_gpus):
@@ -61,5 +61,6 @@ for i in range(num_gpus):
 	t.daemon = True
 	t.start()
 
+queue_filler.join()
 queue.join()
-print("DONE")
+print("\nDONE")
