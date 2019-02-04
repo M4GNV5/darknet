@@ -33,8 +33,6 @@ function render_detections(canvas, image_url, objects_promise)
 				ctx.fillStyle = "black";
 				ctx.font = `${text_size}px Georgia`;
 				ctx.fillText(text, x - 1, y);
-
-				console.log(name, x, y, w, h);
 			});
 		});
 }

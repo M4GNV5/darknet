@@ -1,38 +1,60 @@
-google.charts.load("current", {packages: ["line", "corechart"]});
-let google_charts_loaded = new Promise((resolve) => google.charts.setOnLoadCallback(() => resolve()));
-
-let data;
-let data_promise = fetch("data.json")
-	.then(res => res.json())
-	.then(_data => data = _data);
-
 let draw_btn = document.getElementById("draw-btn");
 let from_input = document.getElementById("from");
 let to_input = document.getElementById("to");
 let chart_el = document.getElementById("chart");
 let canvas_el = document.getElementById("canvas");
 
+let data;
 let table;
 let chart;
 
 from_input.valueAsNumber = Date.now() - 7 * 24 * 60 * 60 * 1000;
 to_input.valueAsNumber = Date.now();
 
-Promise.all([data_promise, google_charts_loaded])
-	.then(() => draw_chart())
-	.then(() => draw_btn.disabled = false);
+google.charts.load("current", {packages: ["line", "corechart"]});
+google.charts.setOnLoadCallback(() => fetch_data());
 
-function draw_chart()
+function pad(val, len, c)
 {
+	c = c || ' ';
+	val = val.toString();
+	return Array(len - val.length).fill(c).join('') + val;
+}
+
+function fetch_data()
+{
+	chart_el.innerHTML = "Loading...";
+
+	let min = new Date(from_input.value).getTime();
+	let max = new Date(to_input.value).getTime();
+
+	let data_fetches = [];
+	for(let curr = min; curr < max; curr += 24 * 60 * 60 * 1000)
+	{
+		let date = new Date(curr);
+		date = pad(date.getFullYear(), 4, '0') + "-" + pad(date.getMonth() + 1, 2, '0') + "-" + pad(date.getDate(), 2, '0');
+		console.log(curr, new Date(curr), date);
+		data_fetches.push(fetch("json/hdb-" + date + ".json")
+			.then(res => res.json())
+			.catch(res => ({}))
+		);
+	}
+
+	Promise.all(data_fetches)
+		.then(data => data.reduce((x, y) => Object.assign(x, y), {}))
+		.then(data => draw_chart(data, min, max));
+}
+
+function draw_chart(_data, min, max)
+{
+	data = _data;
+
 	table = new google.visualization.DataTable();
 	table.addColumn("date", "Date");
 	table.addColumn("number", "Car");
 	table.addColumn("number", "Truck");
 	table.addColumn("number", "Person");
 
-	let min = new Date(from_input.value).getTime();
-	let max = new Date(to_input.value).getTime();
-	console.log(min, max);
 	let rows = [];
 
 	for(let dateStr in data)
@@ -111,6 +133,9 @@ function draw_chart()
 function show_details()
 {
 	let selection = chart.getSelection()[0];
+	if(!selection || !selection.row)
+		return;
+
 	let date = table.getValue(selection.row, 0);
 	date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
 

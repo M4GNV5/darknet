@@ -2,9 +2,9 @@
 	<body>
 		From <input id="from" type="datetime-local" />
 		to <input id="to" type="datetime-local" />
-		<button id="draw-btn" onclick="draw_chart()" disabled>Show</button>
+		<button id="draw-btn" onclick="fetch_data()" disabled>Show</button>
 		<br /><br />
-		<div id="chart"></div>
+		<div id="chart">Initializing...</div>
 		<br /><br />
 		<canvas id="canvas"></canvas>
 		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
