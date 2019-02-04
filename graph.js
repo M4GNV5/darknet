@@ -23,6 +23,7 @@ function pad(val, len, c)
 
 function fetch_data()
 {
+	draw_btn.disabled = true;
 	chart_el.innerHTML = "Loading...";
 
 	let min = new Date(from_input.value).getTime();
@@ -128,6 +129,8 @@ function draw_chart(_data, min, max)
 	});
 
 	google.visualization.events.addListener(chart, 'select', show_details);
+
+	draw_btn.disabled = false;
 }
 
 function show_details()
