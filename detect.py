@@ -7,22 +7,42 @@ from Queue import Queue
 if len(sys.argv) != 3:
 	raise "Required arguments: <input path> <output path>"
 
-in_path = sys.argv[1] + "/"
-out_path = sys.argv[2] + "/"
+path_in = sys.argv[1]
+path_out = sys.argv[2]
+num_cpus = 2
+folders = Queue()
+folders.put((path_in, path_out))
+
 queue = Queue()
 num_gpus = 4
 total_count = 0
 
-def fill_queue():
+def add_files_from(path_in, path_out):
 	global total_count
 
-	in_path_list = os.listdir(in_path)
-	out_path_list = os.listdir(out_path)
-	for in_file in in_path_list:
-		out_file = os.path.basename(in_file) + ".json"
-		if out_file not in out_path_list:
-			queue.put((in_path + in_file, out_path + out_file))
+	files_in = os.listdir(path_in)
+	files_out = os.listdir(path_out)
+
+	for file in files_in:
+		inner_in = os.path.join(path_in, file)
+		if os.path.isdir(inner_in):
+			inner_out = os.path.join(path_out, file)
+			if not os.path.isdir(inner_out):
+				os.mkdir(inner_out)
+
+			folders.put((inner_in, inner_out))
+		elif file in files_out:
+			pass
+		else:
+			inner_out = os.path.join(path_out, os.path.basename(file) + ".json")
 			total_count = total_count + 1
+			queue.put((inner_in, inner_out))
+
+def fill_queue():
+	while True:
+		path_in, path_out = folders.get()
+		add_files_from(path_in, path_out)
+		folders.task_done()
 
 def worker(i, net, meta):
 	dn.set_gpu(i)
@@ -46,8 +66,10 @@ def worker(i, net, meta):
 
 		queue.task_done()
 
-queue_filler = Thread(target=fill_queue, args = ())
-queue_filler.start()
+for i in range(num_cpus):
+	t = Thread(target=fill_queue, args = ())
+	t.daemon = True
+	t.start()
 
 args = []
 for i in range(num_gpus):
@@ -61,6 +83,6 @@ for i in range(num_gpus):
 	t.daemon = True
 	t.start()
 
-queue_filler.join()
+folders.join()
 queue.join()
 print("\nDONE")
