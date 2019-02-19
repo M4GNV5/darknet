@@ -142,11 +142,12 @@ function show_details()
 	let date = table.getValue(selection.row, 0);
 	date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
 
-	let name = "hdb_" + date.toISOString().substr(0, 19).replace("T", "-");
+	let isoDate = date.toISOString();
+	let name = "/hdb_" + isoDate.substr(0, 19).replace("T", "-");
 	let dat = data[name];
 
 	if(!dat)
 		return;
 
-	render_detections(canvas_el, `img_raw/${name}.jpg`, Promise.resolve(dat));
+	render_detections(canvas_el, `img_raw/${isoDate.substr(0, 7)}/${name}.jpg`, Promise.resolve(dat));
 }
