@@ -26,11 +26,12 @@ function fetch_data()
 	draw_btn.disabled = true;
 	chart_el.innerHTML = "Loading...";
 
-	let min = new Date(from_input.value).getTime();
 	let max = new Date(to_input.value).getTime();
+	let min = new Date(from_input.value);
+	min = new Date(min.getFullYear(), min.getMonth(), min.getDate()).getTime();
 
 	let data_fetches = [];
-	for(let curr = min; curr < max; curr += 24 * 60 * 60 * 1000)
+	for(let curr = min; curr <= max; curr += 24 * 60 * 60 * 1000)
 	{
 		let date = new Date(curr);
 		date = pad(date.getFullYear(), 4, '0') + "-" + pad(date.getMonth() + 1, 2, '0') + "-" + pad(date.getDate(), 2, '0');
@@ -143,7 +144,7 @@ function show_details()
 	date = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
 
 	let isoDate = date.toISOString();
-	let name = "/hdb_" + isoDate.substr(0, 19).replace("T", "-");
+	let name = "hdb_" + isoDate.substr(0, 19).replace("T", "-");
 	let dat = data[name];
 
 	if(!dat)

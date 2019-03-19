@@ -31,7 +31,7 @@ def add_files_from(path_in, path_out):
 				os.mkdir(inner_out)
 
 			folders.put((inner_in, inner_out))
-		elif file in files_out:
+		elif file + ".json" in files_out:
 			pass
 		else:
 			inner_out = os.path.join(path_out, os.path.basename(file) + ".json")
